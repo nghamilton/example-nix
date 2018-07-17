@@ -1,0 +1,65 @@
+use_nix_persisted()
+{
+    local use_cache="false"
+
+    while getopts c opt
+    do
+        case $opt in
+        c)  use_cache=true;;
+        \?) fail "illegal switch: $opt";;
+        esac
+    done
+    shift "$((OPTIND - 1))"
+
+    local default_shell_file=shell.nix
+    if ! [ -f "$default_shell_file" ]
+    then default_shell_file=default.nix
+    fi
+    local shell_file="${1:-${default_shell_file}}"
+    local wd="$PWD/.direnv/nix"
+    mkdir -p "$wd"
+    local derivation="$wd/shell.drv"
+    local cache="$PWD/.direnv/env.cache"
+
+    if ! [ -f "$shell_file" ]
+    then fail "not found: $shell_file"
+    fi
+
+    if [ "$shell_file" -nt "$cache" ]
+    then
+        log_status "rebuilding with nix-shell"
+        rm -f "$derivation"
+        rm -f "$cache"
+    fi
+
+    if [ "$use_cache" = "false" ]
+    then rm -f "$cache"
+    fi
+
+    if ! [ -f "$derivation" ]
+    then
+        IN_NIX_SHELL=1 nix-instantiate \
+            --add-root "$derivation" --indirect \
+            "$shell_file" >/dev/null
+        nix-store \
+            -r $(nix-store --query --references "$derivation") \
+            --add-root "$wd/dep" --indirect >/dev/null
+    fi
+
+    if ! [ -f "$cache" ]
+    then
+        local tmp="$(mktemp "${cache}.tmp-XXXXXXXX")"
+        trap "rm -rf '$tmp'" EXIT
+        nix-shell "$shell_file" \
+                --run "env -u shellHook -u TERM direnv dump" \
+            | tail -1 \
+            > "$tmp" \
+            && mv "$tmp" "$cache"
+    fi
+
+    local old_term="$TERM"
+    direnv_load cat "$cache"
+    export TERM="$old_term"
+    unset old_term
+    watch_file "$shell_file"
+}

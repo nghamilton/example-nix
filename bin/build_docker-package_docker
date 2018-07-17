@@ -2,6 +2,7 @@
 
 
 IMAGE_NAME="nix-example-app"
+BUILD_IMAGE="nixorg/nix:1"
 TARBALL="example-app.tar.gz"
 NIX_CACHE_CONTAINER="nix-cache"
 PORT="8081"
@@ -36,7 +37,7 @@ nix_cache_exists()
 
 create_nix_cache()
 (
-    docker create --name "$NIX_CACHE_CONTAINER" --volume /nix nixos/nix true
+    docker create --name "$NIX_CACHE_CONTAINER" --volume /nix "$BUILD_IMAGE" true
 )
 
 
@@ -44,9 +45,10 @@ nix_build_in_docker_run()
 (
     docker run \
         --rm \
+        --env NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs-channels/archive/13e74a838db27825c88be99b1a21fbee33aa6803.tar.gz \
         --volume "$(abspath "$PROJECT_ROOT")":/mnt \
         --volumes-from "$NIX_CACHE_CONTAINER" \
-        nixos/nix \
+        "$BUILD_IMAGE" \
         sh -c \
             "
             nix-build \
@@ -65,7 +67,7 @@ nix_build_in_docker_run()
 
 docker_build()
 (
-    docker build --tag "$IMAGE_NAME" "$PROJECT_ROOT"
+    docker build --tag "$IMAGE_NAME" "$PROJECT_ROOT" --no-cache
 )
 
 

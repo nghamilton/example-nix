@@ -5,14 +5,19 @@ let
     # Version of Nixpkgs to lock down to for our build
     #
     pkgsMakeArgs = {
-        # git describe: 16.09-beta-11812-gfa03b8279f
-        rev = "fa03b8279fa9b544c29c97eaa5263163b6716046";
-        sha256 = "1n8mwwg14xhm4arxafzfmf0wbr8smkgdvaagirxpni77jci81ar3";
+
+        # No attribute is actually required.  You can used the default Nixpkgs
+        # version pinned by the library.  This version is also tested to build
+        # the overrides built-in.
+
+        # git describe: 18.03-beta-12822-g5ac6ab091a4
+        rev = "14a9ca27e69e33ac8ffb708de08883f8079f954a";
+        sha256 = "1grsq8mcpl88v6kz8dp0vsybr0wzfg4pvhamj42dpd3vgr93l2ib";
     };
 
     # Library for making our packages (local copy)
     #
-    pkgsMake = import modules/pkgs-make;
+    pkgsMake = import ./pkgs-make;
 
     # Alternatively, we can use the default Nixpkgs to pull a remote copy.
     # A remote copy allows us to share this Nix library with other projects.
@@ -31,7 +36,7 @@ let
     #                sha256 = "1aps3bppzwg9vs9nq3brmxvn6dccwlrwbwq0i37m8k0a1g4446j6";
     #            };
     #    in
-    #    import (pkgs-make-path + "/modules/pkgs-make");
+    #    import (pkgs-make-path + "/pkgs-make");
 
     # `pkgs-make` doesn't have a lot of code, but it does hide away enough
     # complexity to make this usage site simple and compact.
@@ -47,34 +52,6 @@ let
 
 in
 
-pkgsMake pkgsMakeArgs ({ call, lib }:
-    let
-        modifiedHaskellCall = f:
-            lib.nix.composed [
-                lib.haskell.enableLibraryProfiling
-                lib.haskell.doHaddock
-                f
-            ];
-        haskellLib = modifiedHaskellCall call.haskell.lib;
-        haskellApp = modifiedHaskellCall call.haskell.app;
-    in
-    rec {
-
-        ekg-assets = call.package modules/ekg-assets;
-        example-lib = haskellLib modules/example-lib;
-        example-app-static = haskellApp modules/example-app;
-        example-app-dynamic =
-            lib.haskell.enableSharedExecutables example-app-static;
-        example-app-compact = call.package modules/example-app-compact;
-        example-tarball = lib.nix.tarball example-app-compact;
-
-        # Values in sub-sets are excluded as dependencies (prevents triggering
-        # unnecessary builds when entering into nix-shell).  Be careful not to
-        # chose a name that conflicts with a package name in `nixpkgs`.
-        #
-        example-extra.stack = call.package modules/stack;
-        example-extra.licenses =
-            lib.nix.license-report.json
-                { inherit example-app-compact example-app-dynamic; };
-
-    })
+pkgsMake pkgsMakeArgs (args: 
+    (import examples/haskell args)
+        // (import examples/python args))
