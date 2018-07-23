@@ -4,24 +4,22 @@ let
 
     # Version of Nixpkgs to lock down to for our build
     #
+    nixpkgs = import <nixpkgs> {};
+    nixVersion = nixpkgs.lib.importJSON ./nixpkgs-version.json;
     pkgsMakeArgs = {
-        # git describe: 16.09-beta-11812-gfa03b8279f
-        rev = "fa03b8279fa9b544c29c97eaa5263163b6716046";
-        sha256 = "1n8mwwg14xhm4arxafzfmf0wbr8smkgdvaagirxpni77jci81ar3";
-    };
+        inherit (nixVersion) rev sha256;
+      };
 
-    # Library for making our packages (local copy)
+    # Library for making our packages
     #
     pkgsMake =
         let
-	    nixpkgs = import <nixpkgs> {};
-	    pinnedVersion = nixpkgs.lib.importJSON ./pkgs-make-version.json;
-
+            pkgsMakeVersion = nixpkgs.lib.importJSON ./pkgs-make-version.json;
             pkgs-make-path =
                 nixpkgs.fetchFromGitHub {
                     owner = "nghamilton";
                     repo = "pkgs-make";
-	            inherit (pinnedVersion) rev sha256; 
+                    inherit (pkgsMakeVersion) rev sha256;
                 };
         in
         import (pkgs-make-path);

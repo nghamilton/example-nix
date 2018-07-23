@@ -1,7 +1,7 @@
 {
   "url": "https://github.com/nghamilton/pkgs-make",
-  "rev": "080e0dc5e42315757a889127ed62bc0a3365c6bd",
-  "date": "2018-07-23T16:20:21+01:00",
-  "sha256": "0b993zsag5n1xlp04k7n1nii32fd6s37gsha6awx6ayixw6wkknr",
+  "rev": "41aec3caa5659a65b9f0487bca8c9f07881c47d6",
+  "date": "2018-07-23T17:11:21+01:00",
+  "sha256": "058b0idlyajizskzjc1x2gwc0hwppdnp3n8s3w30fplrin2jcg8p",
   "fetchSubmodules": true
 }
