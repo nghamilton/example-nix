@@ -1,5 +1,5 @@
 { stdenv
-, ekg-assets
+, example-assets
 , example-app-static
 , haskellPackages
 , replace
@@ -12,7 +12,7 @@ stdenv.mkDerivation {
     buildInputs = [ replace ];
 
     service = example-app-static;
-    assets = ekg-assets;
+    assets = example-assets;
     ekg = haskellPackages.ekg;
 
     builder = ./builder.sh;

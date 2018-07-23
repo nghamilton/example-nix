@@ -4,7 +4,7 @@
 }:
 
 stdenv.mkDerivation {
-    name = "ekg-assets";
+    name = "example-assets";
     buildInputs = [ findutils ];
     ekg = haskellPackages.ekg;
     builder = ./builder.sh;
